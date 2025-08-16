@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>買い物リスト</title>
+
+  <!-- PWA設定 -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="買い物リスト">
+  <link rel="apple-touch-icon" href="icon.png">
+
+  <style>
+    body {
+      font-family: sans-serif;
+      margin: 20px;
+      background: #f8f8f8;
+    }
+    h1 { text-align: center; }
+    #inputArea {
+      display: flex;
+      gap: 5px;
+      margin-bottom: 10px;
+    }
+    input {
+      flex: 1;
+      padding: 8px;
+      font-size: 16px;
+    }
+    button {
+      padding: 8px 12px;
+      font-size: 16px;
+      background: #4caf50;
+      color: white;
+      border: none;
+      border-radius: 4px;
+    }
+    ul {
+      list-style: none;
+      padding: 0;
+    }
+    li {
+      padding: 8px;
+      background: white;
+      margin-bottom: 5px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-radius: 4px;
+    }
+    .deleteBtn {
+      background: #e53935;
+      color: white;
+      border: none;
+      padding: 4px 8px;
+      border-radius: 4px;
+    }
+  </style>
+
+  <script>
+    let items = JSON.parse(localStorage.getItem("shoppingList")) || [];
+
+    function saveList() {
+      localStorage.setItem("shoppingList", JSON.stringify(items));
+    }
+
+    function renderList() {
+      const list = document.getElementById("list");
+      list.innerHTML = "";
+      items.forEach((item, index) => {
+        const li = document.createElement("li");
+        li.textContent = item;
+        const del = document.createElement("button");
+        del.textContent = "削除";
+        del.className = "deleteBtn";
+        del.onclick = () => {
+          items.splice(index, 1);
+          saveList();
+          renderList();
+        };
+        li.appendChild(del);
+        list.appendChild(li);
+      });
+    }
+
+    function addItem() {
+      const input = document.getElementById("itemInput");
+      if (input.value.trim() !== "") {
+        items.push(input.value.trim());
+        saveList();
+        renderList();
+        input.value = "";
+      }
+    }
+
+    window.onload = () => {
+      renderList();
+      document.getElementById("addBtn").onclick = addItem;
+    };
+
+    // PWA用 Service Worker 登録
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("sw.js");
+    }
+  </script>
+</head>
+<body>
+  <h1>買い物リスト</h1>
+  <div id="inputArea">
+    <input type="text" id="itemInput" placeholder="商品を入力">
+    <button id="addBtn">追加</button>
+  </div>
+  <ul id="list"></ul>
+</body>
+</html>
