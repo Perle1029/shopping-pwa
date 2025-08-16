@@ -4,67 +4,24 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>買い物リスト</title>
-
-  <!-- PWA設定 -->
-  <link rel="manifest" href="manifest.json">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <meta name="apple-mobile-web-app-title" content="買い物リスト">
-  <link rel="apple-touch-icon" href="icon.png">
-
   <style>
-    body {
-      font-family: sans-serif;
-      margin: 20px;
-      background: #f8f8f8;
-    }
-    h1 { text-align: center; }
-    #inputArea {
-      display: flex;
-      gap: 5px;
-      margin-bottom: 10px;
-    }
-    input {
-      flex: 1;
-      padding: 8px;
-      font-size: 16px;
-    }
-    button {
-      padding: 8px 12px;
-      font-size: 16px;
-      background: #4caf50;
-      color: white;
-      border: none;
-      border-radius: 4px;
-    }
-    ul {
-      list-style: none;
-      padding: 0;
-    }
-    li {
-      padding: 8px;
-      background: white;
-      margin-bottom: 5px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      border-radius: 4px;
-    }
-    .done {
-      text-decoration: line-through;
-      color: gray;
-    }
-    .deleteBtn {
-      background: #e53935;
-      color: white;
-      border: none;
-      padding: 4px 8px;
-      border-radius: 4px;
-      margin-left: auto;
-    }
+    body { font-family: sans-serif; padding: 20px; }
+    ul { list-style: none; padding: 0; }
+    li { margin: 5px 0; }
+    li.checked { text-decoration: line-through; color: gray; }
   </style>
+</head>
+<body>
+  <h1>買い物リスト</h1>
+  <input type="text" id="itemInput" placeholder="商品を入力">
+  <button onclick="addItem()">追加</button>
+  <ul id="list"></ul>
 
   <script>
+    const listEl = document.getElementById("list");
+    const inputEl = document.getElementById("itemInput");
+
+    // LocalStorage から保存済みリストを読み込み
     let items = JSON.parse(localStorage.getItem("shoppingList")) || [];
 
     function saveList() {
@@ -72,67 +29,45 @@
     }
 
     function renderList() {
-      const list = document.getElementById("list");
-      list.innerHTML = "";
-      items.forEach((item, index) => {
-        const li = document.createElement("li");
+      listEl.innerHTML = "";
 
+      // ✅ 未チェック → チェック済み の順に並べ替え
+      const sortedItems = [...items].sort((a, b) => a.checked - b.checked);
+
+      sortedItems.forEach((item, index) => {
+        const li = document.createElement("li");
+        li.className = item.checked ? "checked" : "";
+        
         const checkbox = document.createElement("input");
         checkbox.type = "checkbox";
-        checkbox.checked = item.done;
+        checkbox.checked = item.checked;
         checkbox.onchange = () => {
-          items[index].done = checkbox.checked;
-          saveList();
-          renderList();
-        };
-
-        const span = document.createElement("span");
-        span.textContent = item.name;
-        if (item.done) span.classList.add("done");
-
-        const del = document.createElement("button");
-        del.textContent = "削除";
-        del.className = "deleteBtn";
-        del.onclick = () => {
-          items.splice(index, 1);
-          saveList();
-          renderList();
+          // 元の items を更新
+          const originalIndex = items.findIndex(i => i.name === item.name);
+          if (originalIndex !== -1) {
+            items[originalIndex].checked = checkbox.checked;
+            saveList();
+            renderList();
+          }
         };
 
         li.appendChild(checkbox);
-        li.appendChild(span);
-        li.appendChild(del);
-        list.appendChild(li);
+        li.appendChild(document.createTextNode(" " + item.name));
+        listEl.appendChild(li);
       });
     }
 
     function addItem() {
-      const input = document.getElementById("itemInput");
-      if (input.value.trim() !== "") {
-        items.push({ name: input.value.trim(), done: false });
-        saveList();
-        renderList();
-        input.value = "";
-      }
-    }
-
-    window.onload = () => {
+      const text = inputEl.value.trim();
+      if (text === "") return;
+      items.push({ name: text, checked: false });
+      inputEl.value = "";
+      saveList();
       renderList();
-      document.getElementById("addBtn").onclick = addItem;
-    };
-
-    // PWA用 Service Worker 登録
-    if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("sw.js");
     }
+
+    // 初期表示
+    renderList();
   </script>
-</head>
-<body>
-  <h1>買い物リスト</h1>
-  <div id="inputArea">
-    <input type="text" id="itemInput" placeholder="商品を入力">
-    <button id="addBtn">追加</button>
-  </div>
-  <ul id="list"></ul>
 </body>
 </html>
