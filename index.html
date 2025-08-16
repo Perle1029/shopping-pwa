@@ -4,6 +4,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>買い物リスト</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="favicon.ico" type="image/x-icon">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <meta name="theme-color" content="#ffffff">
+  <link rel="apple-touch-icon" href="icon-192.png">
   <style>
     body { font-family: sans-serif; padding: 20px; }
     ul { list-style: none; padding: 0; }
@@ -21,7 +26,6 @@
     const listEl = document.getElementById("list");
     const inputEl = document.getElementById("itemInput");
 
-    // LocalStorage から保存済みリストを読み込み
     let items = JSON.parse(localStorage.getItem("shoppingList")) || [];
 
     function saveList() {
@@ -34,7 +38,7 @@
       // ✅ 未チェック → チェック済み の順に並べ替え
       const sortedItems = [...items].sort((a, b) => a.checked - b.checked);
 
-      sortedItems.forEach((item, index) => {
+      sortedItems.forEach((item) => {
         const li = document.createElement("li");
         li.className = item.checked ? "checked" : "";
         
@@ -42,10 +46,9 @@
         checkbox.type = "checkbox";
         checkbox.checked = item.checked;
         checkbox.onchange = () => {
-          // 元の items を更新
-          const originalIndex = items.findIndex(i => i.name === item.name);
-          if (originalIndex !== -1) {
-            items[originalIndex].checked = checkbox.checked;
+          const idx = items.findIndex(i => i.name === item.name);
+          if (idx !== -1) {
+            items[idx].checked = checkbox.checked;
             saveList();
             renderList();
           }
@@ -68,6 +71,11 @@
 
     // 初期表示
     renderList();
+
+    // ✅ PWA Service Worker 登録
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("service-worker.js");
+    }
   </script>
 </body>
 </html>
