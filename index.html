@@ -46,9 +46,13 @@
       background: white;
       margin-bottom: 5px;
       display: flex;
-      justify-content: space-between;
       align-items: center;
+      gap: 8px;
       border-radius: 4px;
+    }
+    .done {
+      text-decoration: line-through;
+      color: gray;
     }
     .deleteBtn {
       background: #e53935;
@@ -56,6 +60,7 @@
       border: none;
       padding: 4px 8px;
       border-radius: 4px;
+      margin-left: auto;
     }
   </style>
 
@@ -71,7 +76,20 @@
       list.innerHTML = "";
       items.forEach((item, index) => {
         const li = document.createElement("li");
-        li.textContent = item;
+
+        const checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.checked = item.done;
+        checkbox.onchange = () => {
+          items[index].done = checkbox.checked;
+          saveList();
+          renderList();
+        };
+
+        const span = document.createElement("span");
+        span.textContent = item.name;
+        if (item.done) span.classList.add("done");
+
         const del = document.createElement("button");
         del.textContent = "削除";
         del.className = "deleteBtn";
@@ -80,6 +98,9 @@
           saveList();
           renderList();
         };
+
+        li.appendChild(checkbox);
+        li.appendChild(span);
         li.appendChild(del);
         list.appendChild(li);
       });
@@ -88,7 +109,7 @@
     function addItem() {
       const input = document.getElementById("itemInput");
       if (input.value.trim() !== "") {
-        items.push(input.value.trim());
+        items.push({ name: input.value.trim(), done: false });
         saveList();
         renderList();
         input.value = "";
